@@ -6,7 +6,7 @@ def fetch_cricket_scores():
 
     headers = {
         "X-RapidAPI-Host": "cricbuzz-cricket.p.rapidapi.com",
-        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"  # Replace if needed
+        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"  # Replace with your valid key
     }
 
     try:
@@ -14,15 +14,14 @@ def fetch_cricket_scores():
         response.raise_for_status()
         data = response.json()
 
-        # Safely get matches from first match type (usually International)
         match_types = data.get('typeMatches', [])
         if not match_types:
-            print("No match types found.")
+            print("⚠️ No match types found.")
             return
 
         series_matches = match_types[0].get('seriesMatches', [])
         if not series_matches:
-            print("No series matches found.")
+            print("⚠️ No series matches found.")
             return
 
         for series in series_matches:
@@ -37,13 +36,13 @@ def fetch_cricket_scores():
                     match_format = match_info.get('matchFormat', 'N/A')
                     status = match_info.get('status', 'N/A')
 
-                    table = []
-                    table.append(["Match Description", f"{desc} | {team1} vs {team2}"])
-                    table.append(["Series Name", series_name])
-                    table.append(["Match Format", match_format])
-                    table.append(["Result", status])
+                    table = [
+                        ["Match Description", f"{desc} | {team1} vs {team2}"],
+                        ["Series Name", series_name],
+                        ["Match Format", match_format],
+                        ["Result", status]
+                    ]
 
-                    # Check for scores
                     match_score = match.get('matchScore', {})
                     team1_score = match_score.get('team1Score', {}).get('inngs1', {})
                     team2_score = match_score.get('team2Score', {}).get('inngs1', {})
@@ -52,7 +51,7 @@ def fetch_cricket_scores():
                         t1_runs = team1_score.get('runs', 'N/A')
                         t1_wkts = team1_score.get('wickets', 'N/A')
                         t1_overs = team1_score.get('overs', 'N/A')
-                        table.append([f"{team1}", f"{t1_runs}/{t1_wkts} in {t1_overs} overs"])
+                        table.append([team1, f"{t1_runs}/{t1_wkts} in {t1_overs} overs"])
                     else:
                         table.append([team1, "Score not available"])
 
@@ -60,7 +59,7 @@ def fetch_cricket_scores():
                         t2_runs = team2_score.get('runs', 'N/A')
                         t2_wkts = team2_score.get('wickets', 'N/A')
                         t2_overs = team2_score.get('overs', 'N/A')
-                        table.append([f"{team2}", f"{t2_runs}/{t2_wkts} in {t2_overs} overs"])
+                        table.append([team2, f"{t2_runs}/{t2_wkts} in {t2_overs} overs"])
                     else:
                         table.append([team2, "Score not available"])
 
@@ -68,11 +67,11 @@ def fetch_cricket_scores():
                     print("\n")
 
                 except KeyError as e:
-                    print(f"Skipped a match due to missing data: {e}")
+                    print(f"⚠️ Skipped a match due to missing data: {e}")
                     continue
 
     except requests.exceptions.RequestException as e:
-        print(f"Failed to fetch data: {e}")
+        print(f"❌ Failed to fetch data: {e}")
 
-# Run the function
+# Run it
 fetch_cricket_scores()
