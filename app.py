@@ -1,3 +1,24 @@
+from flask import Flask, render_template_string
+import requests
+import json
+from tabulate import tabulate
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    scores = fetch_cricket_scores()
+    html_output = "<br><br>".join(scores)
+    return render_template_string("""
+        <html>
+            <head><title>Live Cricket Scores</title></head>
+            <body>
+                <h1>Live Cricket Scores</h1>
+                {{ scores | safe }}
+            </body>
+        </html>
+    """, scores=html_output)
+
 def fetch_cricket_scores():
     url = "https://cricbuzz-cricket.p.rapidapi.com/matches/v1/recent"
     headers = {
@@ -7,21 +28,18 @@ def fetch_cricket_scores():
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
-        print("Failed to fetch recent matches. Status code:", response.status_code)
-        return ["Error fetching data from API"]
+        return [f"<b>Failed to fetch recent matches. Status code:</b> {response.status_code}"]
 
     try:
         data = response.json()
         if 'typeMatches' not in data:
-            print("typeMatches key not found in the response. Raw data:")
-            print(json.dumps(data, indent=2))
-            return ["API response structure changed or invalid key"]
+            return ["<b>API response structure changed or invalid key</b>"]
 
         matches_data = []
 
         for match in data['typeMatches'][0]['seriesMatches'][0]['seriesAdWrapper']['matches']:
             table = [
-                [f" {match['matchInfo']['matchDesc']} , {match['matchInfo']['team1']['teamName']} vs {match['matchInfo']['team2']['teamName']}"],
+                [f"{match['matchInfo']['matchDesc']} : {match['matchInfo']['team1']['teamName']} vs {match['matchInfo']['team2']['teamName']}"],
                 ["Series Name", match['matchInfo']['seriesName']],
                 ["Match Format", match['matchInfo']['matchFormat']],
                 ["Result", match['matchInfo']['status']],
@@ -33,5 +51,7 @@ def fetch_cricket_scores():
         return matches_data
 
     except Exception as e:
-        print("Exception while parsing API response:", e)
-        return ["Error processing cricket scores"]
+        return [f"<b>Error:</b> {e}"]
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
