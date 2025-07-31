@@ -3,50 +3,34 @@ import requests
 
 app = Flask(__name__)
 
-def fetch_cricket_scores():
+@app.route('/')
+def home():
     url = "https://cricbuzz-cricket.p.rapidapi.com/matches/v1/recent"
-
     headers = {
         "X-RapidAPI-Host": "cricbuzz-cricket.p.rapidapi.com",
-        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"  # Replace with your actual key
+        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"
     }
-
     response = requests.get(url, headers=headers)
+    data = response.json()
 
-    try:
-        data = response.json()
-    except ValueError:
-        return [{"error": "Invalid JSON response from API"}]
+    # Extract and organize data
+    recent_matches = []
+    upcoming_matches = []
 
-    type_matches = data.get('typeMatches')
-    if not type_matches:
-        return [{"error": "No match data found or unexpected API format"}]
+    for match in data.get('matches', []):
+        match_info = {
+            "team1": match.get("team1", {}).get("name", "Team 1"),
+            "team2": match.get("team2", {}).get("name", "Team 2"),
+            "status": match.get("status", "N/A"),
+            "start_time": match.get("startDate", "N/A")
+        }
 
-    matches = []
-    try:
-        series_matches = type_matches[0].get('seriesMatches', [])
-        for series in series_matches:
-            series_wrapper = series.get('seriesAdWrapper')
-            if not series_wrapper:
-                continue
-            for match in series_wrapper.get('matches', []):
-                team1 = match['team1']['teamName']
-                team2 = match['team2']['teamName']
-                status = match.get('status', 'Status not available')
-                matches.append({
-                    'team1': team1,
-                    'team2': team2,
-                    'status': status
-                })
-    except Exception as e:
-        return [{"error": f"Error parsing match data: {str(e)}"}]
+        if match.get('matchInfo', {}).get('state') == "Complete":
+            recent_matches.append(match_info)
+        elif match.get('matchInfo', {}).get('state') == "Preview":
+            upcoming_matches.append(match_info)
 
-    return matches
-
-@app.route('/')
-def index():
-    cricket_scores = fetch_cricket_scores()
-    return render_template('index.html', cricket_scores=cricket_scores)
+    return render_template('index.html', recent_matches=recent_matches, upcoming_matches=upcoming_matches)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(debug=True)
