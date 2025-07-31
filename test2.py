@@ -6,72 +6,25 @@ def fetch_cricket_scores():
 
     headers = {
         "X-RapidAPI-Host": "cricbuzz-cricket.p.rapidapi.com",
-        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"  # Replace with your valid key
+        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"  # Replace with your RapidAPI key
     }
+    response = requests.get(url, headers=headers)
+    data = response.json()
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
+    matches = data['typeMatches'][0]['seriesMatches'][0]['seriesAdWrapper']['matches']
 
-        match_types = data.get('typeMatches', [])
-        if not match_types:
-            print("⚠️ No match types found.")
-            return
+    for match in matches:
+        table = []
+        table.append(["Match Description", f"{match['matchInfo']['matchDesc']} , {match['matchInfo']['team1']['teamName']} vs {match['matchInfo']['team2']['teamName']}"])
+        table.append(["Match Details", ""])
+        table.append(["Series Name", match['matchInfo']['seriesName']])
+        table.append(["Match Format", match['matchInfo']['matchFormat']])
+        table.append(["Result", match['matchInfo']['status']])
+        table.append([f"{match['matchInfo']['team1']['teamName']}", f"{match['matchScore']['team1Score']['inngs1']['runs']}/{match['matchScore']['team1Score']['inngs1']['wickets']} in {match['matchScore']['team1Score']['inngs1']['overs']} overs"])
+        table.append([f"{match['matchInfo']['team2']['teamName']}", f"{match['matchScore']['team2Score']['inngs1']['runs']}/{match['matchScore']['team2Score']['inngs1']['wickets']} in {match['matchScore']['team2Score']['inngs1']['overs']} overs"])
 
-        series_matches = match_types[0].get('seriesMatches', [])
-        if not series_matches:
-            print("⚠️ No series matches found.")
-            return
+        headers = ["Key", "Value"]
+        print(tabulate(table, headers=headers, tablefmt="grid"))
+        print("\n")
 
-        for series in series_matches:
-            matches = series.get('seriesAdWrapper', {}).get('matches', [])
-            for match in matches:
-                try:
-                    match_info = match['matchInfo']
-                    team1 = match_info['team1']['teamName']
-                    team2 = match_info['team2']['teamName']
-                    desc = match_info['matchDesc']
-                    series_name = match_info.get('seriesName', 'N/A')
-                    match_format = match_info.get('matchFormat', 'N/A')
-                    status = match_info.get('status', 'N/A')
-
-                    table = [
-                        ["Match Description", f"{desc} | {team1} vs {team2}"],
-                        ["Series Name", series_name],
-                        ["Match Format", match_format],
-                        ["Result", status]
-                    ]
-
-                    match_score = match.get('matchScore', {})
-                    team1_score = match_score.get('team1Score', {}).get('inngs1', {})
-                    team2_score = match_score.get('team2Score', {}).get('inngs1', {})
-
-                    if team1_score:
-                        t1_runs = team1_score.get('runs', 'N/A')
-                        t1_wkts = team1_score.get('wickets', 'N/A')
-                        t1_overs = team1_score.get('overs', 'N/A')
-                        table.append([team1, f"{t1_runs}/{t1_wkts} in {t1_overs} overs"])
-                    else:
-                        table.append([team1, "Score not available"])
-
-                    if team2_score:
-                        t2_runs = team2_score.get('runs', 'N/A')
-                        t2_wkts = team2_score.get('wickets', 'N/A')
-                        t2_overs = team2_score.get('overs', 'N/A')
-                        table.append([team2, f"{t2_runs}/{t2_wkts} in {t2_overs} overs"])
-                    else:
-                        table.append([team2, "Score not available"])
-
-                    print(tabulate(table, headers=["Key", "Value"], tablefmt="grid"))
-                    print("\n")
-
-                except KeyError as e:
-                    print(f"⚠️ Skipped a match due to missing data: {e}")
-                    continue
-
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Failed to fetch data: {e}")
-
-# Run it
 fetch_cricket_scores()
