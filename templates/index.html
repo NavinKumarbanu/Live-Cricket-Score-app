@@ -4,45 +4,32 @@
     <title>Cricket Scores</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Custom styles */
         .navbar-brand {
-            background-color: #d2dfd9; /* Change the background color */
-            color: white; /* Change the text color */
+            background-color: #d2dfd9;
+            color: white;
             padding: 10px;
             font-size: 34px;
         }
         .top-bar {
-            background-color: rgb(25, 25, 105); /* Change the background color */
-            color: #e7f1f4; /* Change the text color */
+            background-color: rgb(25, 25, 105);
+            color: #e7f1f4;
             padding: 8px;
             font-size: 24px;
-            font-family: Arial, sans-serif; /* Change the font family */
-
+            font-family: Arial, sans-serif;
         }
         body {
-            background-color: #030f13; /* Change the overall background color */
-            color: #ece0e0; /* Change the overall text color */
+            background-color: #030f13;
+            color: #ece0e0;
         }
         .custom-card {
-        width: 500px; /* Change the width */
-        height: 250px; /* Change the height */
-        /* Add any other styling properties as needed */
-    }
-    .custom-upcoming-card {
-        width: 500px; /* Change the width */
-        height: 150px; /* Change the height */
-        /* Add any other styling properties as needed */
-    }
-    .navbar-brand {
-        font-size: 24px; /* Change the font size as needed */
-    }
+            width: 500px;
+            height: 250px;
+        }
     </style>
-  
 </head>
 <body>
     <div class="top-bar">
         <div class="container">
-           
             Live Cricket Score
         </div>
     </div>
@@ -52,34 +39,15 @@
         <div class="row row-cols-1 row-cols-md-2">
             {% for score in cricket_scores %}
                 <div class="col mb-4">
-                    <div class="card custom-card">
+                    <div class="card custom-card text-dark">
                         <div class="card-body">
-                            {{ score | safe }}
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    
-        <h2>Upcoming Matches</h2>
-        <div class="row row-cols-1 row-cols-md-2">
-            {% for match in upcoming_matches %}
-                <div class="col mb-4">
-                    <div class="card custom-upcoming-card">
-                        <div class="card-body">
-                            <ul class="list-group">
-                                <li class="list-group-item">
-                                    <strong>Date:</strong> {{ match['Date'] }}<br>
-                                    <strong>Description:</strong> {{ match['Description'] }}<br>
-                                    <strong>Teams:</strong> {{ match['Teams'] }}
-                                </li>
-                            </ul>
+                            <h5>{{ score['team1'] }} vs {{ score['team2'] }}</h5>
+                            <p>Status: {{ score['status'] }}</p>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
     </div>
-    
 </body>
 </html>
