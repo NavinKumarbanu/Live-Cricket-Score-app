@@ -1,53 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Cricket Scores</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Live Cricket Score</title>
     <style>
-        .navbar-brand {
-            background-color: #d2dfd9;
-            color: white;
-            padding: 10px;
-            font-size: 34px;
-        }
-        .top-bar {
-            background-color: rgb(25, 25, 105);
-            color: #e7f1f4;
-            padding: 8px;
-            font-size: 24px;
-            font-family: Arial, sans-serif;
-        }
-        body {
-            background-color: #030f13;
-            color: #ece0e0;
-        }
-        .custom-card {
-            width: 500px;
-            height: 250px;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        h1, h2 { color: #333; }
+        .match-section { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <div class="container">
-            Live Cricket Score
-        </div>
-    </div>
-    
-    <div class="container mt-4">
+
+    <h1>Live Cricket Score</h1>
+
+    <div class="match-section">
         <h2>Recent Matches</h2>
-        <div class="row row-cols-1 row-cols-md-2">
-            {% for score in cricket_scores %}
-                <div class="col mb-4">
-                    <div class="card custom-card text-dark">
-                        <div class="card-body">
-                            <h5>{{ score['team1'] }} vs {{ score['team2'] }}</h5>
-                            <p>Status: {{ score['status'] }}</p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
+        {% for match in recent_matches %}
+            <p><strong>{{ match['team1'] }} vs {{ match['team2'] }}</strong><br>
+            {{ match['status'] }}</p>
+        {% else %}
+            <p>No recent matches found.</p>
+        {% endfor %}
     </div>
+
+    <div class="match-section">
+        <h2>Upcoming Matches</h2>
+        {% for match in upcoming_matches %}
+            <p><strong>{{ match['team1'] }} vs {{ match['team2'] }}</strong><br>
+            {{ match['start_time'] }}</p>
+        {% else %}
+            <p>No upcoming matches scheduled.</p>
+        {% endfor %}
+    </div>
+
 </body>
 </html>
