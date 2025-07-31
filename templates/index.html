@@ -1,37 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Live Cricket Score</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
-        h1, h2 { color: #333; }
-        .match-section { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    </style>
-</head>
-<body>
+from flask import Flask, render_template
+import requests
 
-    <h1>Live Cricket Score</h1>
+app = Flask(__name__)
 
-    <div class="match-section">
-        <h2>Recent Matches</h2>
-        {% for match in recent_matches %}
-            <p><strong>{{ match['team1'] }} vs {{ match['team2'] }}</strong><br>
-            {{ match['status'] }}</p>
-        {% else %}
-            <p>No recent matches found.</p>
-        {% endfor %}
-    </div>
+@app.route('/')
+def home():
+    url = "https://cricbuzz-cricket.p.rapidapi.com/matches/v1/recent"
+    headers = {
+        "X-RapidAPI-Host": "cricbuzz-cricket.p.rapidapi.com",
+        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"
+    }
 
-    <div class="match-section">
-        <h2>Upcoming Matches</h2>
-        {% for match in upcoming_matches %}
-            <p><strong>{{ match['team1'] }} vs {{ match['team2'] }}</strong><br>
-            {{ match['start_time'] }}</p>
-        {% else %}
-            <p>No upcoming matches scheduled.</p>
-        {% endfor %}
-    </div>
+    response = requests.get(url, headers=headers)
+    data = response.json()
 
-</body>
-</html>
+    cricket_scores = []
+    upcoming_matches = []
+
+    for match in data.get('matches', []):
+        state = match.get('matchInfo', {}).get('state')
+        team1 = match.get('team1', {}).get('name', 'Team 1')
+        team2 = match.get('team2', {}).get('name', 'Team 2')
+        status = match.get('status', 'N/A')
+        date = match.get('matchInfo', {}).get('startDate', 'N/A')
+
+        if state == "Complete":
+            # Format into HTML for rendering
+            score_html = f"<strong>{team1} vs {team2}</strong><br>Status: {status}"
+            cricket_scores.append(score_html)
+
+        elif state == "Preview":
+            upcoming_match = {
+                "Date": date,
+                "Description": status,
+                "Teams": f"{team1} vs {team2}"
+            }
+            upcoming_matches.append(upcoming_match)
+
+    return render_template('index.html', cricket_scores=cricket_scores, upcoming_matches=upcoming_matches)
+
+if __name__ == '__main__':
+    app.run(debug=True)
