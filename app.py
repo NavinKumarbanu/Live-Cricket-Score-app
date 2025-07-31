@@ -1,9 +1,5 @@
 from flask import Flask, render_template
 import requests
-import json
-from tabulate import tabulate
-import os
-
 
 app = Flask(__name__)
 
@@ -12,75 +8,45 @@ def fetch_cricket_scores():
 
     headers = {
         "X-RapidAPI-Host": "cricbuzz-cricket.p.rapidapi.com",
-        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3'"  
+        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3"  # Replace this with your actual API key
     }
+
     response = requests.get(url, headers=headers)
-    data = response.json()
+    
+    try:
+        data = response.json()
+    except ValueError:
+        return [{"error": "Invalid JSON response from API"}]
 
-    matches_data = []
+    type_matches = data.get('typeMatches')
+    if not type_matches:
+        return [{"error": "No match data found or unexpected API format"}]
 
-    for match in data['typeMatches'][0]['seriesMatches'][0]['seriesAdWrapper']['matches']:
-        table = [
-            [f" {match['matchInfo']['matchDesc']} , {match['matchInfo']['team1']['teamName']} vs {match['matchInfo']['team2']['teamName']}"],
-            ["Series Name", match['matchInfo']['seriesName']],
-            ["Match Format", match['matchInfo']['matchFormat']],
-            ["Result", match['matchInfo']['status']],
-            [f"{match['matchInfo']['team1']['teamName']} Score", f"{match['matchScore']['team1Score']['inngs1']['runs']}/{match['matchScore']['team1Score']['inngs1']['wickets']} in {match['matchScore']['team1Score']['inngs1']['overs']} overs"],
-            [f"{match['matchInfo']['team2']['teamName']} Score", f"{match['matchScore']['team2Score']['inngs1']['runs']}/{match['matchScore']['team2Score']['inngs1']['wickets']} in {match['matchScore']['team2Score']['inngs1']['overs']} overs"]
-        ]
-        matches_data.append(tabulate(table, tablefmt="html"))
+    matches = []
+    try:
+        series_matches = type_matches[0].get('seriesMatches', [])
+        for series in series_matches:
+            series_wrapper = series.get('seriesAdWrapper')
+            if not series_wrapper:
+                continue
+            for match in series_wrapper.get('matches', []):
+                team1 = match['team1']['teamName']
+                team2 = match['team2']['teamName']
+                status = match.get('status', 'Status not available')
+                matches.append({
+                    'team1': team1,
+                    'team2': team2,
+                    'status': status
+                })
+    except Exception as e:
+        return [{"error": f"Error parsing match data: {str(e)}"}]
 
-    return matches_data
-
-def fetch_upcoming_matches():
-    url = "https://cricbuzz-cricket.p.rapidapi.com/schedule/v1/international"
-
-    headers = {
-        "X-RapidAPI-Host": "cricbuzz-cricket.p.rapidapi.com",
-        "X-RapidAPI-Key": "327a4f3817msh0e716c198181c52p17c0ffjsn0e7e53feb9b3'"  # Replace with your RapidAPI key
-    }
-    #
-    response = requests.get(url, headers=headers)
-    upcoming_matches = []
-
-    if response.status_code == 200:
-        try:
-            data = response.json()
-            match_schedules = data.get('matchScheduleMap', [])
-
-            for schedule in match_schedules:
-                if 'scheduleAdWrapper' in schedule:
-                    date = schedule['scheduleAdWrapper']['date']
-                    matches = schedule['scheduleAdWrapper']['matchScheduleList']
-
-                    for match_info in matches:
-                        for match in match_info['matchInfo']:
-                            description = match['matchDesc']
-                            team1 = match['team1']['teamName']
-                            team2 = match['team2']['teamName']
-                            match_data = {
-                                'Date': date,
-                                'Description': description,
-                                'Teams': f"{team1} vs {team2}"
-                            }
-                            upcoming_matches.append(match_data)
-                else:
-                    print("No match schedule found for this entry.")
-
-        except json.JSONDecodeError as e:
-            print("Error parsing JSON:", e)
-        except KeyError as e:
-            print("Key error:", e)
-    else:
-        print("Failed to fetch cricket scores. Status code:", response.status_code)
-
-    return upcoming_matches
+    return matches
 
 @app.route('/')
 def index():
     cricket_scores = fetch_cricket_scores()
-    upcoming_matches = fetch_upcoming_matches()
-    return render_template('index.html', cricket_scores=cricket_scores, upcoming_matches=upcoming_matches)
+    return render_template('index.html', matches=cricket_scores)
 
 if __name__ == '__main__':
-    app.run(port=int(os.environ.get("PORT", 8080)),host='0.0.0.0',debug=True)
+    app.run(host='0.0.0.0', port=8080)
